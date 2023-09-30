@@ -1,0 +1,26 @@
+baseURL: https://ahzed11.github.io/
+languageCode: en-us
+title: "Ahzed's blog"
+theme: "PaperMod"
+
+params:
+  defaultTheme: auto
+
+  homeInfoParams:
+    Title: Ahzed's blog
+    Content: Hello, I am a computer science student at UCLouvain, Belgium.
+
+  socialIcons:
+    - name: github
+      url: "https://github.com/Ahzed11"
+    - name: linkedin
+      url: "https://www.linkedin.com/in/alexandre-zenon/"
+    - name: itchio
+      url: "https://ahzed.itch.io/"
+
+  ShowReadingTime: true
+
+  ShowToc: true
+  TocOpen: true
+
+  ShowCodeCopyButtons: true
