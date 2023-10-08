@@ -24,7 +24,7 @@ Erlang keeps an `old` and a `current` version of the code so we can upgrade or d
 
 Both the `old` and the `current` versions are valid and can run concurrently. To make our program switch to the `current` version of the code, we have to make a fully qualified call.
 
-However, in the following recipe, we will not have to consider that thanks to the generic abstraction that OTP gives us.
+However, in the following recipe, we will not have to consider that because the generic abstraction that OTP gives us handles all of that for us.
 
 #### Why is it desirable ?
 Code replacement allows you to have an always running system. As cited in the "What is Erlang ?" section, this can come in handy in some areas like telecom, databases, banking systems, etc... 
@@ -32,7 +32,13 @@ Code replacement allows you to have an always running system. As cited in the "W
 It might, however, not be interesting in every situation. For example, if you run a website, it might be sufficient to simply restart it or, if your servers are behind a load balancer, to update them one by one manually.
 
 #### How do we do it in OTP ?
-[TODO]:https://todo.com
+At the root, we have our project. Our project can have many releases. The releases can have many applications. And these applications can have many version.
+
+Everytime we update our applications, we will have to describe how to go from one version to the other with an appup file. Appup stands for application upgrade.
+
+Everytime we want to create a new version of our project, we will have to create a new release and describe how to go from one version to another with a relup file. Relup stands for release upgrade.
+
+With these files, OTP will be able to do the transition from one version to another because we tell it what to reload, what to add, what to delete etc. However, it is not easy to write correct appups, relups and updates so it is highly suggested to test the upgrades in development before applying them in production.  
 
 ## Recipe
 
@@ -287,15 +293,20 @@ To do this, use this command:
 rebar3 tar -n myapp -v "0.2.0"
 ```
 
-### Move it to your _build folder
+### Move the packed release to the release folder
+To make the upgrade, we will need to move our packed release from where it was generated to the release folder. To do this, type:
 ```sh
 mv _build/default/rel/myapp/myapp-0.2.0.tar.gz _build/default/rel/myapp/releases/0.2.0/myapp.tar.gz
 ```
 
 ### Upgrade your app
+Now that our packed release is at the correct location, we can proceed to make the upgrade. To do this type:
+
 ```sh
 _build/default/rel/myapp/bin/myapp-0.1.0 upgrade "0.2.0"
 ```
+
+This command tells the 0.1.0 release to upgrade to the 0.2.0 release.
 
 ### Test your upgrade
 Call the `hey/1` function from the shell you have left open earlier.
@@ -306,6 +317,10 @@ myapp_serv:hey(Pid).
 
 And you should get this answer `hey`.
 
+## Conclusion
+While this took me some time to figure all that out, I hope this recipe can help Erlang newcomers.
+
+The whole process is a bit cumbersome so I will try to find better or automated ways to do this process. If I find anything, it will most likely be talked about in a different blog post so you might want to have a look at my recent posts.
 
 [1]:https://www.erlang.org/
 [2]:http://rebar3.org/
