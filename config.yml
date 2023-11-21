@@ -1,13 +1,13 @@
 baseURL: https://ahzed11.github.io/
 languageCode: en-us
-title: "Ahzed's blog"
+title: "Zenon's brain dumps"
 theme: "PaperMod"
 
 params:
   defaultTheme: auto
 
   homeInfoParams:
-    Title: Ahzed's blog
+    Title: Zenon's brain dumps
     Content: Hello, I am a computer science student at UCLouvain, Belgium.
 
   socialIcons:
