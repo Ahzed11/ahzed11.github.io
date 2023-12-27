@@ -4,6 +4,12 @@ title: "Zenon's brain dumps"
 theme: "PaperMod"
 
 params:
+  outputs:
+    home:
+      - HTML
+      - RSS
+      - JSON # is necessary
+
   defaultTheme: auto
 
   homeInfoParams:
@@ -17,6 +23,8 @@ params:
       url: "https://www.linkedin.com/in/alexandre-zenon/"
     - name: itchio
       url: "https://ahzed.itch.io/"
+    - name: rss
+      url: "https://ahzed11.github.io/index.xml"
 
   ShowReadingTime: true
 
