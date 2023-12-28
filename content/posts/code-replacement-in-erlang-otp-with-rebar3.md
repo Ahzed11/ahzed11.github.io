@@ -1,7 +1,7 @@
 ---
 title: "Code replacement in Erlang/OTP with Rebar3"
 date: 2023-10-06T16:03:14+09:00
-draft: false
+draft: true
 tags: ["Erlang", "OTP", "Rebar3"]
 ---
 
