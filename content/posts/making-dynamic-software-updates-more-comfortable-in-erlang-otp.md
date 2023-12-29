@@ -32,7 +32,7 @@ The different parts of this pipeline will be described below.
 ### Erlang CI
 The first workflow is straightforward and not directly related to dynamic software updates. However, as part of my effort to provide a complete pipeline, this job is essential to ensure proper verification of the modules that are under development.
 
-These verifications include dead code analysis, unit tests, static analysis and coverage analysis. Subsequently, a release is built each time a `push` or a `pull-request` is made to the main branch.
+These verifications include dead code analysis, unit tests, static analysis, coverage analysis... Subsequently, a release is built each time a `push` or a `pull-request` is made to the main branch to verify that everything compiles.
 
 ```yml
 name: Erlang CI
@@ -64,7 +64,7 @@ jobs:
 ```
 
 ### Relup CI
-The second workflow is a little more complicated and is divided in three parts.
+The second workflow is a little more complicated and is divided in three parts. It runs on every pull request made to main.
 
 ```yml
 # Beginning of the workflow
@@ -83,14 +83,14 @@ jobs:
 
     container:
       image: erlang:26.1.2
-      options: --user 1001
+      options: --user 1001 # Fix for the user permissions
 
     steps:
         # Described in the following sections
 ```
 
 #### Verifying that a previous tag exists
-As this workflow is designed to test relups, it does not make sense to execute it if there is no prior release. Furthermore, running this workflow without a preceeding release would result in failure, an outcome that is undesirable. To check the existence of a previous tag, a custom action is employed. It fetches the Github API and verifies the existence of at least one tag. If a tag exists, the return value is set to `"true"`, otherwise it is set to `"false"`. These values will be utilized in the subsequent steps to determine whether they should run or not.
+As this workflow is designed to test relups, it does not make sense to execute it if there is no prior release. Furthermore, running this workflow without a preceeding release would result in failure, an outcome that is undesirable. To check the existence of a previous tag, a custom Github action is employed. It fetches the Github API and verifies the existence of at least one tag. If a tag exists, the return value is set to `"true"`, otherwise it is set to `"false"`. These values will be utilized in the subsequent steps to determine whether they should be executed or not.
 
 While a git command could have served this purpose, attempts to implement it resulted in errors linked to permissions within the Docker container. This made me opt for a custom action. Altough I Later discovered a resolution for the permission issue, I decided to retain the custom action rather than rewriting this part of the workflow.
 
@@ -137,4 +137,175 @@ Some developers might express concerns about the automatic generation of the app
         NEW=$(cat vsn.log | awk '/NEW:/ {print $2}')
         echo "OLD_TAR=$OLD" >> $GITHUB_ENV
         echo "NEW_TAR=$NEW" >> $GITHUB_ENV
+```
+
+#### Run the update
+This step is the one that is the most related to dynamic software updates. It consists in running and validating the update of the release through a series of operations. The sequence is structured as follows:
+
+1. Start the old release
+2. Modify its state
+3. Upgrade to the new release
+4. Test the state
+5. Modify the state
+6. Downgrade to the old release
+7. Test the state
+
+Splitting these tests and state modifications into four different scripts allows us to set an arbitrarily complex state up and to test it at every important stage. For now, Bash scripts are used to execute these modifications and tests. Later, using escripts will be considered.
+
+```yml
+- name: Run relup application
+    working-directory: erlang
+    if: ${{steps.check.outputs.hasTags == 'true'}}
+    run: |
+        mkdir relupci
+        tar -xvf "${{ env.OLD_TAR }}" -C relupci
+        MATRIX_WIDTH=128 MATRIX_HEIGHT=128 relupci/bin/pixelwar daemon
+        cp "${{ env.NEW_TAR }}" relupci/releases/
+
+
+        OLD_TAG=$(echo "${{ env.OLD_TAR }}"  | sed -nr 's/^.*([0-9]+\.[0-9]+\.[0-9]+)\.tar\.gz$/\1/p')
+        NEW_TAG=$(echo "${{ env.NEW_TAR }}"  | sed -nr 's/^.*([0-9]+\.[0-9]+\.[0-9]+)\.tar\.gz$/\1/p')
+        
+        echo "Launch before upgrade test"
+        ./apps/pixelwar/test/before_upgrade.sh
+
+        relupci/bin/pixelwar upgrade ${NEW_TAG}
+        relupci/bin/pixelwar versions
+
+        echo "Launch after upgrade test"
+        ./apps/pixelwar/test/after_upgrade.sh
+
+        echo "Launch before downgrade test"
+        ./apps/pixelwar/test/before_downgrade.sh
+
+        relupci/bin/pixelwar downgrade ${OLD_TAG}
+
+        echo "Launch after downgrade test"
+        ./apps/pixelwar/test/after_downgrade.sh
+```
+
+### Publish tarball
+In the last workflow, the update is bundled and uploaded to its corresponding Github release. This workflow is triggered for every pushed tag.
+
+This workflow is an adaptation of the one found in the [the Dandelion repository](https://github.com/ferd/dandelion). However, instead of working with S3 like the original, it is customized to operate smoothly within GitHub.
+
+```yml
+name: Publish tarball
+
+on:
+  push:
+    tags: [ "v[0-9]+.[0-9]+.[0-9]+" ]
+
+env:
+  RELNAME: pixelwar
+
+jobs:
+# ...
+```
+
+#### Fetch version
+In this step, the system retrieves the most recent release linked to the current repository and its tag. If it is an upgrade, an environment variable is then configured accordingly.
+```yml
+# ...
+build:
+  name: Prepare build artifacts
+  runs-on: ubuntu-latest
+
+  container:
+    image: erlang:26.1.2
+
+  steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+    - name: Fetch manifest version
+        run: |
+          NEW_VSN=${GITHUB_REF##*/v}
+          echo "VSN=$NEW_VSN" >> $GITHUB_ENV
+          API_RESPONSE=$(curl -L -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{secrets.GH_TOKEN}}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest)
+          echo "API_RESPONSE: $API_RESPONSE"
+          
+          OLD_VSN=$(echo $API_RESPONSE | grep -o '"tag_name": ".*"' | cut -d'"' -f4)
+          if echo "$API_RESPONSE" | grep -q '"message": "Not Found"'; then
+            OLD_VSN=""
+          fi
+
+          echo "OLD_VSN=$OLD_VSN" >> $GITHUB_ENV
+          IS_UPGRADE=$(echo "$NEW_VSN $OLD_VSN" | awk -vFS='[. ]' '($1==$4 && $2>$5) || ($1==$4 && $2>=$5 && $3>$6) {print 1; exit} {print 0}')
+          if [ "$IS_UPGRADE" -eq 1 ]; then
+              echo "RELUP=1" >> $GITHUB_ENV
+          else
+              echo "RELUP=0" >> $GITHUB_ENV
+          fi
+    - run: |
+            echo "${{ env.OLD_VSN }} -> ${{ env.VSN }} : ${{ env.RELUP }}"
+#...
+```
+
+#### Build a tarball
+In this step, a tarball with the release is built. If it is an upgrade, an appup and a relup are also generated.
+
+```yml
+# ...
+- name: Build a tarball
+  working-directory: erlang
+  run: |
+    if [ ${{ env.RELUP }} -eq 1 ]; then
+      ORIG=$(/usr/bin/git log -1 --format='%H')
+      git checkout v${{ env.OLD_VSN }}
+      rebar3 do clean -a, release
+      git checkout $ORIG
+      rebar3 do clean -a, release
+      rebar3 appup generate
+      rebar3 relup -n ${{ env.RELNAME }} -v ${{ env.VSN }} -u ${{ env.OLD_VSN }}
+    else
+      rebar3 release
+    fi
+    rebar3 tar
+    BUILD=$(ls _build/default/rel/${{ env.RELNAME }}/${{ env.RELNAME }}-*.tar.gz)
+    mkdir ../_artifacts
+    cp $BUILD ../_artifacts/${{ env.RELNAME }}-${{ env.VSN }}.tar.gz
+# ...
+```
+
+#### Upload build artifacts
+Github actions allows us to store the results of the preceding steps. This feature is utilizated to retrieve these artifacts in the succeeding job.
+```yml
+#...
+- name: Upload build artifacts
+  uses: actions/upload-artifact@v3
+  with:
+    name: artifacts
+    path: _artifacts
+    retention-days: 1
+#...
+```
+
+#### Publish build artifacts
+In the final step, which is a distinct job, the objective is to upload the artifacts to the corresponding Github release. To achieve this, the [release-action](https://github.com/ncipollo/release-action) made by [ncipollo](https://github.com/ncipollo) will be used.
+
+```yml
+# ...
+upload:
+  name: Publish build artifacts
+  needs: build
+  runs-on: ubuntu-latest
+
+  permissions:
+    id-token: write
+    contents: write # Necessary to upload files to the release
+
+  steps:
+    - uses: actions/checkout@v3
+    - name: Get build artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: artifacts
+        path: _artifacts # Output folder from the previous job
+
+    - name:  Upload release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: |
+          _artifacts/*.tar.gz
 ```
