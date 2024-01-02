@@ -213,8 +213,15 @@ build:
 
   container:
     image: erlang:26.1.2
+    options: --user 1001
 
   steps:
+    - name: Get latest release
+        id: get-latest-release
+        uses: ahzed11/get-latest-release-action@v1.2
+        with:
+          keepv: false # Remove the v in front of the version
+    
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
@@ -222,15 +229,10 @@ build:
         run: |
           NEW_VSN=${GITHUB_REF##*/v}
           echo "VSN=$NEW_VSN" >> $GITHUB_ENV
-          API_RESPONSE=$(curl -L -H "Accept: application/vnd.github+json" -H "Authorization: Bearer ${{secrets.GH_TOKEN}}" -H "X-GitHub-Api-Version: 2022-11-28" https://api.github.com/repos/${GITHUB_REPOSITORY}/releases/latest)
-          echo "API_RESPONSE: $API_RESPONSE"
           
-          OLD_VSN=$(echo $API_RESPONSE | grep -o '"tag_name": ".*"' | cut -d'"' -f4)
-          if echo "$API_RESPONSE" | grep -q '"message": "Not Found"'; then
-            OLD_VSN=""
-          fi
-
+          OLD_VSN=${{steps.get-latest-release.outputs.release}}
           echo "OLD_VSN=$OLD_VSN" >> $GITHUB_ENV
+
           IS_UPGRADE=$(echo "$NEW_VSN $OLD_VSN" | awk -vFS='[. ]' '($1==$4 && $2>$5) || ($1==$4 && $2>=$5 && $3>$6) {print 1; exit} {print 0}')
           if [ "$IS_UPGRADE" -eq 1 ]; then
               echo "RELUP=1" >> $GITHUB_ENV
@@ -309,3 +311,9 @@ upload:
         artifacts: |
           _artifacts/*.tar.gz
 ```
+
+## Possible improvements
+
+- Continuous deployment
+- Usage of `escript` instead of `bash`
+- Sync modules' version with the app's version so it is easy to know which version to use in `code_change`
