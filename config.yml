@@ -36,3 +36,5 @@ params:
   env: production
 
   ShowCodeCopyButtons: true
+
+  ShowPostNavLinks: true
