@@ -162,7 +162,26 @@ This step is the one that is the most related to dynamic software updates. It co
 6. Downgrade to the old release
 7. Test the state
 
-Splitting these tests and state modifications into four different scripts allows us to set an arbitrarily complex state up and to test it at every important stage. Bash scripts are used to execute these modifications and tests.
+Splitting these tests and state modifications into four different bash scripts allows us to set an arbitrarily complex state up and to test it at every important stage. To interact with the application, remote procedure calls are used.
+
+Here is an exemple:
+
+```sh
+#!/bin/bash
+
+binary1=$(./relupci/bin/pixelwar rpc pixelwar_matrix_serv get_state [matrix])
+binary2='#Bin<12,0,12,0,12,0>'
+echo $binary1
+echo $binary2
+
+if [[ $binary1 == $binary2 ]]; then
+  echo "Success"
+  exit 0
+else
+  echo "Fail"
+  exit 1
+fi
+```
 
 ```yml
 - name: Run relup application
