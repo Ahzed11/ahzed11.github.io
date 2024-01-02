@@ -23,6 +23,8 @@ params:
       url: "https://www.linkedin.com/in/alexandre-zenon/"
     - name: itchio
       url: "https://ahzed.itch.io/"
+    - name: kofi
+      url: https://ko-fi.com/ahzed11
     - name: rss
       url: "https://ahzed11.github.io/index.xml"
 
