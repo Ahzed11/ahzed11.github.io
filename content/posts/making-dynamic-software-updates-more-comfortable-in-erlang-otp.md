@@ -1,14 +1,16 @@
 ---
-title: "Making dynamic software updates more comfortable in Erlang/OTP"
+title: "Making dynamic software updates more comfortable in Erlang/OTP thanks to CI/CD"
 date: 2023-12-27T16:27:19+01:00
 draft: true
 tags: ["Erlang", "OTP", "Rebar3", "DSU", "Github", "Actions", "CI/CD"]
 ---
 
 ## Introduction
+
 My main motivation for this project is to provide a way to test Erlang/OTP releases and dynamic software updates in a continuous integration and delivery pipeline. This will allow developers to use the code replacement functionality that is available in Erlang with more confidence.
 
 ### Dynamic software updates
+
 Dynamic software update (DSU) refers to the process of updating parts of a program without halting its execution. It enables running programs to be patched on-the-fly to add features or fix bugs. This capability is particularly crucial for applications that must consistently deliver reliable results. Examples of systems requiring dynamic software include:
 
 - Banking applications
@@ -19,17 +21,21 @@ Dynamic software update (DSU) refers to the process of updating parts of a progr
 However, ensuring the correctness of a dynamic software update is challenging and complex. Most of the time, people may discourage its use unless it is strictly necessary. I aim to address this issue by defining methods and providing tools to test the deployment of dynamic software updates.
 
 ### Continuous integration
+
 Continuous integration (CI) is a set of techniques used in software engineering that involves verifying that each modification made to the codebase does not include any regressions. By running these tests regularly, typically after each commit, the goal is to detect errors as soon as possible.
 
 ### Continuous delivery
+
 Continuous Delivery (CD) typically follows continuous integration and triggers the project build upon successful completion of all tests conducted during continuous integration. In contrast to continuous deployment, continuous integration does not include the deployment of the project.
 
 ## The pipeline
-This pipeline takes advantage of many components present in [the Dandelion repository](https://github.com/ferd/dandelion). The motivation behind this repository is explained in the post named ["My favorite Erlang Container"](https://ferd.ca/my-favorite-erlang-container.html) on [Fred Hebert's website](https://ferd.ca). 
+
+This pipeline takes advantage of many components present in [the Dandelion repository](https://github.com/ferd/dandelion). The motivation behind this repository is explained in the post named ["My favorite Erlang Container"](https://ferd.ca/my-favorite-erlang-container.html) on [Fred Hebert's website](https://ferd.ca).
 
 The different parts of this pipeline will be described below.
 
 ### Erlang CI
+
 The first workflow is straightforward and not directly related to dynamic software updates. However, as part of my effort to provide a complete pipeline, this job is essential to ensure proper verification of the modules that are under development.
 
 These verifications include dead code analysis, unit tests, static analysis, coverage analysis... Subsequently, a release is built each time a `push` or a `pull-request` is made to the main branch to verify that everything compiles.
@@ -64,6 +70,7 @@ jobs:
 ```
 
 ### Relup CI
+
 The second workflow is a little more complicated and is divided in three parts. It runs on every pull request made to main.
 
 ```yml
@@ -90,6 +97,7 @@ jobs:
 ```
 
 #### Verifying that a previous tag exists
+
 As this workflow is designed to test relups, it does not make sense to execute it if there is no prior release. Furthermore, running this workflow without a preceeding release would result in failure, an outcome that is undesirable. To check the existence of a previous tag, a custom Github action is employed. It fetches the Github API and verifies the existence of at least one tag. If a tag exists, the return value is set to `"true"`, otherwise it is set to `"false"`. These values will be utilized in the subsequent steps to determine whether they should be executed or not.
 
 While a git command could have served this purpose, attempts to implement it resulted in errors linked to permissions within the Docker container. This made me opt for a custom action. Altough I Later discovered a resolution for the permission issue, I decided to retain the custom action rather than rewriting this part of the workflow.
@@ -101,10 +109,12 @@ While a git command could have served this purpose, attempts to implement it res
 ```
 
 #### Run validation checks and build releases
+
 This step consists in verifyng that the versions of the applications and the releases have been modified according to the Smoothver naming convention introduced in ["My favorite Erlang Container"](https://ferd.ca/my-favorite-erlang-container.html).
 
 I will brifly describe Smoothver; however, for more details, I recommend reading the post.
 In contrast to Semver's MAJOR.MINOR.PATCH, Smoothver uses the RESTART.RELUP.RELOAD format.
+
 - **RESTART**: Indicates a change requiring the server to be restarted, such as updating the ERTS.
 - **RELUP**: Indicates a change involving a RELUP, for example, when modifying the state of a worker.
 - **RELOAD**: Signifies a change only requiring the reloading of a module.
@@ -112,6 +122,7 @@ In contrast to Semver's MAJOR.MINOR.PATCH, Smoothver uses the RESTART.RELUP.RELO
 A sligthly modified version of the script found in the [the Dandelion repository](https://github.com/ferd/dandelion) is used to verify the correctness of the naming and to pack the releases.
 
 The script works as follows:
+
 1. Verify that the version's naming corresponds to the modifications made
 2. Create releases
 3. Generate an appup using the [rebar3_appup_plugin](https://github.com/lrascao/rebar3_appup_plugin/) by Luis Rascão's
@@ -140,6 +151,7 @@ Some developers might express concerns about the automatic generation of the app
 ```
 
 #### Run the update
+
 This step is the one that is the most related to dynamic software updates. It consists in running and validating the update of the release through a series of operations. The sequence is structured as follows:
 
 1. Start the old release
@@ -150,7 +162,7 @@ This step is the one that is the most related to dynamic software updates. It co
 6. Downgrade to the old release
 7. Test the state
 
-Splitting these tests and state modifications into four different scripts allows us to set an arbitrarily complex state up and to test it at every important stage. For now, Bash scripts are used to execute these modifications and tests. Later, using escripts will be considered.
+Splitting these tests and state modifications into four different scripts allows us to set an arbitrarily complex state up and to test it at every important stage. Bash scripts are used to execute these modifications and tests.
 
 ```yml
 - name: Run relup application
@@ -185,6 +197,7 @@ Splitting these tests and state modifications into four different scripts allows
 ```
 
 ### Publish tarball
+
 In the last workflow, the update is bundled and uploaded to its corresponding Github release. This workflow is triggered for every pushed tag.
 
 This workflow is an adaptation of the one found in the [the Dandelion repository](https://github.com/ferd/dandelion). However, instead of working with S3 like the original, it is customized to operate smoothly within GitHub.
@@ -204,7 +217,9 @@ jobs:
 ```
 
 #### Fetch version
-In this step, the system retrieves the most recent release linked to the current repository and its tag. If it is an upgrade, an environment variable is then configured accordingly.
+
+In this step, the system retrieves the most recent release linked to the current repository and its tag. If it is an upgrade, an environment variable is then configured accordingly. A custom action is used so we do not need to provide a Token to fetch the latest release.
+
 ```yml
 # ...
 build:
@@ -245,6 +260,7 @@ build:
 ```
 
 #### Build a tarball
+
 In this step, a tarball with the release is built. If it is an upgrade, an appup and a relup are also generated.
 
 ```yml
@@ -271,7 +287,9 @@ In this step, a tarball with the release is built. If it is an upgrade, an appup
 ```
 
 #### Upload build artifacts
+
 Github actions allows us to store the results of the preceding steps. This feature is utilizated to retrieve these artifacts in the succeeding job.
+
 ```yml
 #...
 - name: Upload build artifacts
@@ -284,7 +302,8 @@ Github actions allows us to store the results of the preceding steps. This featu
 ```
 
 #### Publish build artifacts
-In the final step, which is a distinct job, the objective is to upload the artifacts to the corresponding Github release. To achieve this, the [release-action](https://github.com/ncipollo/release-action) made by [ncipollo](https://github.com/ncipollo) will be used.
+
+In the final step, which is a distinct job, the objective is to create a release and attach it the build artifacts. To achieve this, the [release-action](https://github.com/ncipollo/release-action) made by [ncipollo](https://github.com/ncipollo) is used.
 
 ```yml
 # ...
