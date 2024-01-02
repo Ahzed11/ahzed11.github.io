@@ -190,29 +190,29 @@ fi
     run: |
         mkdir relupci
         tar -xvf "${{ env.OLD_TAR }}" -C relupci
-        MATRIX_WIDTH=128 MATRIX_HEIGHT=128 relupci/bin/pixelwar daemon
+        MATRIX_WIDTH=128 MATRIX_HEIGHT=128 relupci/bin/pixelwar daemon #1
         cp "${{ env.NEW_TAR }}" relupci/releases/
 
 
         OLD_TAG=$(echo "${{ env.OLD_TAR }}"  | sed -nr 's/^.*([0-9]+\.[0-9]+\.[0-9]+)\.tar\.gz$/\1/p')
         NEW_TAG=$(echo "${{ env.NEW_TAR }}"  | sed -nr 's/^.*([0-9]+\.[0-9]+\.[0-9]+)\.tar\.gz$/\1/p')
         
-        echo "Launch before upgrade test"
-        ./apps/pixelwar/test/before_upgrade.sh
+        echo "Launch before upgrade test" 
+        ./apps/pixelwar/test/before_upgrade.sh #2
 
-        relupci/bin/pixelwar upgrade ${NEW_TAG}
+        relupci/bin/pixelwar upgrade ${NEW_TAG} #3
         relupci/bin/pixelwar versions
 
         echo "Launch after upgrade test"
-        ./apps/pixelwar/test/after_upgrade.sh
+        ./apps/pixelwar/test/after_upgrade.sh #4
 
         echo "Launch before downgrade test"
-        ./apps/pixelwar/test/before_downgrade.sh
+        ./apps/pixelwar/test/before_downgrade.sh #5
 
-        relupci/bin/pixelwar downgrade ${OLD_TAG}
+        relupci/bin/pixelwar downgrade ${OLD_TAG} #6
 
         echo "Launch after downgrade test"
-        ./apps/pixelwar/test/after_downgrade.sh
+        ./apps/pixelwar/test/after_downgrade.sh #7
 ```
 
 ### Publish tarball
