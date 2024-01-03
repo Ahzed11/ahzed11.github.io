@@ -352,6 +352,7 @@ upload:
 
 ## Possible improvements
 
-- Continuous deployment
-- Usage of `escript` instead of `bash`
-- Sync modules' version with the app's version so it is easy to know which version to use in `code_change`
+- Continuous deployment via ssh
+- Usage of `escript` instead of `bash` / Usage of an automation framework.
+- Sync modules' version with the app's version so it is easy to know which version to use in `code_change` instead of hashes ?
+- Provide a rebar3 or Github template with the github workflows included
