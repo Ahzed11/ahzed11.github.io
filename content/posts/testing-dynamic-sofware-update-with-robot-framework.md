@@ -1,5 +1,5 @@
 ---
-title: "Testing Erlang/OTP Dynamic Sofware Updates with Robot Framework"
+title: "Testing Erlang/OTP Dynamic Software Updates with Robot Framework"
 date: 2024-01-14T10:56:27+01:00
 draft: true
 tags: ["Erlang", "OTP", "DSU", "Robot Framework"]
@@ -23,9 +23,9 @@ However, ensuring the correctness of a dynamic software update is challenging an
 > Robot Framework is a generic open source automation framework. It can be used for test automation and robotic process automation (RPA) - [Robot Framework](https://robotframework.org/)
 
 
-This framework has been selected after coming across it during my internship. It is open-source, is easily expandable with Python, has an easy syntax and comes with a diverse range of pre-existing libraries and tools.
+This automation framework has been selected after coming across it during my internship. It is open-source, is easily expandable with Python, has an easy syntax and comes with a diverse range of pre-existing libraries and tools.
 
-Following is what a Robot Framework suite might look like:
+Following is what a Robot Framework test suite might look like:
 ```robot
 *** Settings ***
 Documentation     A test suite for valid login.
@@ -45,7 +45,7 @@ Denied Login with Wrong Password
     [Tags]    negative
     Connect to Server
     Run Keyword And Expect Error    *Invalid Password    Login User    ironman    123
-    Verify Unauthorised Access
+    Verify Unauthorized Access
     [Teardown]    Close Server Connection
 ```
 
@@ -54,7 +54,7 @@ Denied Login with Wrong Password
 It is possible to interact with an OTP release through various commands that can be called via bash. These commands include, for example, starting the release, stopping it, sending RPCs, etc...
 
 This means that it is also possible to interact with the release via Robot Framework using the python subprocess library.
-Below is a short library written to capitalize on this functionality.
+Below is a short library written to leverage this functionality.
 
 ```py
 # otp.py
@@ -117,7 +117,7 @@ def should_be_equal_as_erlang_bytes(actual, expected, msg=None):
 
 The preceding code snippet is intentionally generic, serving as a common foundation for all tests. However, relying solely on a generic library may not be convenient. This is why an app-specific library becomes necessary.
 
-For context, the app under consideration is essentially a matrix where pixels can be placed with specific colors. The following is the library written specifically for this app, leveraging functions from the previous library.
+For context, the Erlang/OTP application under consideration is essentially a matrix where pixels can be placed with specific colors. The following is the library written specifically for this app, leveraging functions from the previous library.
 
 ```py
 # matrix.py
@@ -135,7 +135,7 @@ def get_matrix_state():
     return send_rpc(MODULE, "get_state", f"[{PROCESS}]")
 ```
 
-## Testing the dynamic sofwtare update with Robot Framework
+## Testing the dynamic software update with Robot Framework
 
 With the generic and specific libraries prepared, we can now compose the Robot Framework test. The test for the dynamic software update of this application involves the following operations:
 
@@ -187,6 +187,12 @@ Test state after downgrade
     ${state}    Get Matrix State
     Should Be Equal As Erlang Bytes    ${state}    12,0,12,0,12,0,13,0,13,0,13,0
 
+```
+
+This test suite can be launched with the following command:
+
+```bash
+robot -v OLD_VERSION:${OLD_TAG} -v NEW_VERSION:${NEW_TAG} -v RELEASE_PATH:${RELEASE_PATH} ./test/my_test.robot
 ```
 
 ## Conclusion
