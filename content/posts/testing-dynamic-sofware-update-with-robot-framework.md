@@ -1,7 +1,7 @@
 ---
 title: "Testing Erlang/OTP Dynamic Software Updates with Robot Framework"
 date: 2024-01-14T10:56:27+01:00
-draft: true
+draft: false
 tags: ["Erlang", "OTP", "DSU", "Robot Framework"]
 ---
 
