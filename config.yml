@@ -6,6 +6,8 @@ author: "Alexandre Zenon"
 theme: "PaperMod"
 
 params:
+  comments: true
+
   outputs:
     home:
       - HTML
