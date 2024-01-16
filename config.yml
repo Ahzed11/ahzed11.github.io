@@ -1,6 +1,8 @@
 baseURL: https://ahzed11.github.io/
 languageCode: en-us
 title: "Alexandre Zenon"
+description: "My blog"
+author: "Alexandre Zenon"
 theme: "PaperMod"
 
 params:
