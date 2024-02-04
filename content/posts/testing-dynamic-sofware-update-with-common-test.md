@@ -7,7 +7,7 @@ tags: ["Erlang", "OTP", "DSU", "Common Test", "Peer"]
 
 ## Introduction
 
-In a previous post, the use of Robot Framework to test dynamic software updates was explored. While it worked fine, it is better to stick with tools that are available within Erlang's ecosystem. This is why the use of `Common Test` to test dynamic sofware updates will be explored in this post.
+In a previous blog post, I delved into the use of Robot Framework for testing dynamic software updates. Altough it worked reasonably well, a more sensible approach is to leverage tools readily available within the Erlang ecosystem. Consequently, this post will delve into the use of `Common Test` for testing dynamic software updates.
 
 ### Dynamic software updates
 
@@ -30,17 +30,17 @@ However, ensuring the correctness of a dynamic software update is challenging an
 
 ## Testing the dynamic software update with Common Test
 
-To test the dynamic software update, a peer node is launched within a docker container containing both the old and the new release. Then, the following operations are applied on the aforementioned node:
+To conduct testing on a dynamic software update, a peer node is started within a docker container containing both the old and the new release. Following the launch, the following operations are executed on the aforementioned node:
 
-1. Starting the old release
-2. Modifying its state
-3. Upgrading to the new release
-4. Testing the state
-5. Modifying the state
-6. Downgrading to the old release
-7. Testing the state
+1. Start the old release
+2. Modify its state
+3. Upgrade to the new release
+4. Test the state
+5. Modify the state
+6. Downgrade to the old release
+7. Test the state
 
-Once these operations are translated into a `Common Test` module, it looks like the following:
+Upon translating these operations into a module that implements the `ct_suite` behaviour, the content of the test suite appears as follows:
 
 ```erl
 -module(upgrade_downgrade_SUITE).
@@ -182,13 +182,13 @@ build_image() ->
     os:cmd("docker build -t " ++ ReleaseName ++ " .").
 ```
 
-For context, the Erlang/OTP application under consideration is essentially a matrix where pixels can be placed with specific colors.
+Providing context, the Erlang/OTP application under consideration is essentially a matrix where pixels can be placed with specific colors.
 
 ## Integrating this test within Github Action
 
-At the beginning, the Erlang Docker container was used within the workflow. However it was a mess. First because a merge of the `Docker in Docker` and `Erlang Alpine` images was needed and, also, because it introduced some problem with the Docker `ENTRYPOINT` command that would throw a `no such file or directory` error even though the file was present.
+Initially, the Erlang Docker container was used within the workflow, but it posed challenges. These arose primarily from the need to employ docker in docker to launch the Docker peer, resulting in complications. These include merging the `Docker in Docker` and `Erlang Alpine` images along with issues related to the Docker `ENTRYPOINT` command, which triggered a `no such file or directory` error despite the presence of the entrypoint file.
 
-Thankfully the [erlef/setup-beam](https://github.com/erlef/setup-beam) action came to the rescue and allowed me to run Erlang directly on the virtual machine thus removing the need of `Docker in Docker`.
+Thankfully the [erlef/setup-beam](https://github.com/erlef/setup-beam) action came to the rescue and allowed me to run Erlang directly on the virtual machine. It alleviated the necessity for `Docker in Docker` and simplified the workflow.
 
 Following is a snippet of the `Github workflow` I wrote:
 
@@ -245,10 +245,10 @@ jobs:
 
 ```
 
-For now, the results are simply linked to the workflow's run but it is easy to imagine uploading the results'html page to `Github Pages` and posting a link to it in the corresponding pull request.
+Currently, the results are just linked to the workflow's run, but envisioning the future, it is plausible to upload the results' HTML page to GitHub Pages and post a link to it in the corresponding pull request's thread.
 
 ## Conclusion
 
-While all of this might seem straightforward, it took me quite some time to come to this point.
+Even though the content of this post is pretty straightfoward, reaching the end result took me quite a bit of time. I made numerous attempts to get this to work, however without the `peer` module, I never succeeded. These failures were the reason why I gave a look at tools such as `Robot Framework` in a previous post.
 
-However, I am happy that I managed to make it work because it opens new possiblities such as writing complex tests for `DSUs` which should improve the developer's confidence and also integrating the Erlang Ecosystem into Github.
+Nevertheless, I'm thrilled that I got this test suite and workflow working because it opens up new possibilities. This includes crafting intricate tests for DSUs, which should boost developer confidence, and seamlessly integrating the Common Test results into GitHub.
