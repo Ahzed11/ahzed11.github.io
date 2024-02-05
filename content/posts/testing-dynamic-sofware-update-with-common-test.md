@@ -1,7 +1,7 @@
 ---
 title: "Testing Erlang/OTP Dynamic Software Updates with Common Test"
 date: 2024-02-04T09:35:29+01:00
-draft: true
+draft: false
 tags: ["Erlang", "OTP", "DSU", "Common Test", "Peer"]
 ---
 
