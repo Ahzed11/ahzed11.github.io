@@ -7,7 +7,7 @@ tags: ["Erlang", "OTP", "DSU", "Common Test", "Peer"]
 
 ## Introduction
 
-In a previous blog post, I delved into the use of Robot Framework for testing dynamic software updates. Altough it worked reasonably well, a more sensible approach is to leverage tools readily available within the Erlang ecosystem. Consequently, this post will delve into the use of `Common Test` for testing dynamic software updates.
+In a previous blog post, I delved into the use of Robot Framework for testing dynamic software updates. Although it worked reasonably well, a more sensible approach is to leverage tools readily available within the Erlang ecosystem. Consequently, this post will delve into the use of `Common Test` for testing dynamic software updates.
 
 ### Dynamic software updates
 
@@ -40,7 +40,7 @@ To conduct testing on a dynamic software update, a peer node is started within a
 6. Downgrade to the old release
 7. Test the state
 
-Upon translating these operations into a module that implements the `ct_suite` behaviour, the content of the test suite appears as follows:
+Upon translating these operations into a module that implements the `ct_suite` behavior, the content of the test suite appears as follows:
 
 ```erl
 -module(upgrade_downgrade_SUITE).
@@ -249,6 +249,6 @@ Currently, the results are just linked to the workflow's run, but envisioning th
 
 ## Conclusion
 
-Even though the content of this post is pretty straightfoward, reaching the end result took me quite a bit of time. I made numerous attempts to get this to work, however without the `peer` module, I never succeeded. These failures were the reason why I gave a look at tools such as `Robot Framework` in a previous post.
+Even though the content of this post is pretty straightforward, reaching the end result took me quite a bit of time. I made numerous attempts to get this to work, however without the `peer` module, I never succeeded. These failures were the reason why I gave a look at tools such as `Robot Framework` in a previous post.
 
-Nevertheless, I'm thrilled that I got this test suite and workflow working because it opens up new possibilities. This includes crafting intricate tests for DSUs, which should boost developer confidence, and seamlessly integrating the Common Test results into GitHub.
+Nevertheless, I'm thrilled that I got this test suite and workflow working because it opens up new possibilities. These include crafting intricate tests for DSUs, which should boost developer confidence, and seamlessly integrating the Common Test results into GitHub.
