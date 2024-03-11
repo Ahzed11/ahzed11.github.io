@@ -1,7 +1,7 @@
 ---
 title: "Publish Common Test Result on Github"
 date: 2024-03-11T14:30:31+01:00
-draft: true
+draft: false
 tags: ["Erlang", "OTP", "Github", "Common Test", "CI", "CD", "Actions"]
 summary: Discover how the publish unit test result action can be used with the common test module
 ---
@@ -10,7 +10,7 @@ summary: Discover how the publish unit test result action can be used with the c
 
 Running your tests in Github and reading the logs to discover what went wrong works fine but it can be quite tedious.
 
-This is why I wanted to find a way to summarize the tests that run in my workflows. After some research, I stumbled upon Github Actions that are specificaly crafted for this purpose.
+This is why I wanted to find a way to summarize the tests that run in my workflows. After some research, I stumbled upon Github Actions that are specifically crafted for this purpose.
 
 In this post, I will introduce you to the action I currently use in my repositories.
 
@@ -49,7 +49,7 @@ The `Common Test Hook` that we will use is called `cth_surefire`.
 
 > cth_surefire captures all test results and outputs them as surefire XML into a file. The created file is by default called junit_report.xml. [Common Test Hooks](https://www.erlang.org/doc/apps/common_test/ct_hooks_chapter#built-in-cths)
 
-One thing to note here, if you use Jenkins instead of Github actions is that the `cth_surefire` format can be used directly in `Jenkins` to display test results.
+One thing to note here, if you use Jenkins instead of Github actions, is that the `cth_surefire` format can be used directly in `Jenkins` to display test results.
 
 #### Using the ct_run bash command
 
@@ -69,4 +69,6 @@ If you use rebar3, it is as simple as adding this line to your rebar.config
 
 ## Conclusion
 
-In this post, we have seen how to output `common test` results into XML and how to use it with Github actions that are built for other frameworks. I hope this can be useful for you own projects.
+In this post, we looked at how to convert common test results into XML format and connect them with GitHub Actions, which were initially made for different frameworks. By using the publish-unit-test-result-action and the cth_surefire hook in common test, we've simplified the process of summarizing test results.
+
+I hope this can be useful for your own projects.
