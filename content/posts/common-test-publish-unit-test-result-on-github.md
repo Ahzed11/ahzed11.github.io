@@ -1,5 +1,5 @@
 ---
-title: "Publish Common Test Result on Github"
+title: "Publishing Common Test Result on Github"
 date: 2024-03-11T14:30:31+01:00
 draft: false
 tags: ["Erlang", "OTP", "Github", "Common Test", "CI", "CD", "Actions"]
