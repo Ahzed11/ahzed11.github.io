@@ -4,6 +4,9 @@ date: 2024-03-11T14:30:31+01:00
 draft: false
 tags: ["Erlang", "OTP", "Github", "Common Test", "CI", "CD", "Actions"]
 summary: Discover how the publish unit test result action can be used with the common test module
+cover:
+  image: "images/common-test-publish-unit-test-result-on-github.png"
+  caption: "Captured from https://github.com/Ahzed11/pixelwar"
 ---
 
 ## Introduction
