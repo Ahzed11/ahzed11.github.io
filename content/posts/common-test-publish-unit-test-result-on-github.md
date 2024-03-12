@@ -1,5 +1,5 @@
 ---
-title: "Publishing Common Test Result on Github"
+title: "Publishing Common Test Results on Github"
 date: 2024-03-11T14:30:31+01:00
 draft: false
 tags: ["Erlang", "OTP", "Github", "Common Test", "CI", "CD", "Actions"]
@@ -56,7 +56,7 @@ One thing to note here, if you use Jenkins instead of Github actions, is that th
 If you launch `common test` directly from the command line, you can add the `ct_hooks` parameter followed by `cth_surefire`
 
 ```sh
-ct_run -dir . -ct_hooks cth_surefire
+ct_run -dir . -logdir ./results -ct_hooks cth_surefire
 ```
 
 #### Using rebar3
